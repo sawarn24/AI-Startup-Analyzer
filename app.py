@@ -10,6 +10,21 @@ from services.rag_system import RAGSystem
 from services.agent_orchestrator import AgentOrchestrator
 from services.professional_report_generator import ProfessionalReportGenerator
 from services.gmail_sender import GmailSender
+if not os.path.exists('/tmp/credentials.json'):  # ✅ Check /tmp
+    credentials = {
+        "installed": {
+            "client_id": os.environ.get('GMAIL_CLIENT_ID'),
+            "client_secret": os.environ.get('GMAIL_CLIENT_SECRET'),
+            "project_id": "hack-482015",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "redirect_uris": ["http://localhost"]
+        }
+    }
+    
+    with open('/tmp/credentials.json', 'w') as f:  # ✅ Write to /tmp
+        json.dump(credentials, f)
 
 # Page config
 st.set_page_config(
@@ -913,4 +928,5 @@ st.markdown("""
     <p>🚀 <strong>AI Startup Analyzer</strong> | Powered by Google Cloud & Gemini 2.0</p>
     <p>Built with Streamlit • LangChain • ChromaDB • Multi-Agent AI System</p>
 </div>
+
 """, unsafe_allow_html=True)
