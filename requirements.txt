@@ -14,4 +14,9 @@ plotly                  # Charts in Streamlit UI
 streamlit-option-menu   # UI component
 reportlab               # PDF report generation
 matplotlib              # Charts in PDF reports
-toml        
+
+toml  
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
