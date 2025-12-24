@@ -13,7 +13,8 @@ import os
 import pickle
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-
+CREDENTIALS_FILE = '/tmp/credentials.json'
+TOKEN_FILE = '/tmp/token.pickle'
 class GmailSender:
     """Send emails using Gmail API with PDF attachments"""
     
@@ -35,20 +36,29 @@ class GmailSender:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 self.creds.refresh(Request())
             else:
-                if not os.path.exists('credentials.json'):
-                    raise FileNotFoundError(
-                        "credentials.json not found! Please download it from Google Cloud Console.\n"
-                        "1. Go to https://console.cloud.google.com/\n"
-                        "2. Enable Gmail API\n"
-                        "3. Create OAuth 2.0 credentials\n"
-                        "4. Download as 'credentials.json'"
-                    )
+               if not os.path.exists(CREDENTIALS_FILE):
+                    # Fallback: check current directory (for local development)
+                    if os.path.exists('credentials.json'):
+                        credentials_path = 'credentials.json'
+                    else:
+                        raise FileNotFoundError(
+                            "credentials.json not found! Please ensure environment variables are set:\n"
+                            "- GMAIL_CLIENT_ID\n"
+                            "- GMAIL_CLIENT_SECRET\n\n"
+                            "For local development:\n"
+                            "1. Go to https://console.cloud.google.com/\n"
+                            "2. Enable Gmail API\n"
+                            "3. Create OAuth 2.0 credentials\n"
+                            "4. Download as 'credentials.json'"
+                        )
+                else:
+                    credentials_path = CREDENTIALS_FILE
                 
-                flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+                flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
                 self.creds = flow.run_local_server(port=0)
             
             # Save credentials for next time
-            with open('token.pickle', 'wb') as token:
+            with open(TOKEN_FILE, 'wb') as token:
                 pickle.dump(self.creds, token)
         
         self.service = build('gmail', 'v1', credentials=self.creds)
@@ -285,4 +295,5 @@ class GmailSender:
         print(f"   ✅ Sent: {results['success']}")
         print(f"   ❌ Failed: {results['failed']}")
         
+
         return results
