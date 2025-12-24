@@ -1,0 +1,17 @@
+streamlit                # Main UI framework
+langchain               # RAG framework
+langchain-community     # Document loaders
+langchain-google-genai  # Gemini integration (NOT USED - see below)
+langchain_huggingface   # HuggingFace embeddings (ACTUALLY USED)
+pypdf                   # PDF processing
+chromadb                # Vector database
+google-generativeai     # Gemini API (ACTUALLY USED)
+python-docx             # DOCX processing
+requests                # HTTP requests for Google Search
+beautifulsoup4          # Web scraping (imported but not actively used)
+pandas                  # Data manipulation (imported but minimal usage)
+plotly                  # Charts in Streamlit UI
+streamlit-option-menu   # UI component
+reportlab               # PDF report generation
+matplotlib              # Charts in PDF reports
+toml        
