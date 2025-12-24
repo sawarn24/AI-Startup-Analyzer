@@ -51,7 +51,7 @@ class GmailSender:
                             "3. Create OAuth 2.0 credentials\n"
                             "4. Download as 'credentials.json'"
                         )
-              else:
+               else:
                 credentials_path = CREDENTIALS_FILE
                 
                 flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
@@ -297,4 +297,5 @@ class GmailSender:
         
 
         return results
+
 
