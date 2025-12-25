@@ -3,7 +3,7 @@ from config import GEMINI_API_KEY, GOOGLE_SEARCH_API_KEY, SEARCH_ENGINE_ID
 import requests
 import json
 
-genai.configure(api_key=GEMINI_API_KEY)
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 class BenchmarkingAgent:
     """Agent to benchmark startup against industry peers"""
@@ -244,4 +244,5 @@ Guidelines:
             },
             "benchmark_score": 50,
             "summary": "Unable to benchmark due to insufficient data"
+
         }
