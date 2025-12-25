@@ -4,6 +4,7 @@ from services.agents.risk_detection_agent import RiskDetectionAgent
 from services.agents.market_research_agent import MarketResearchAgent
 from services.agents.growth_agent import GrowthAgent
 from services.agents.recommendation_agent import RecommendationAgent
+import os
 
 class AgentOrchestrator:
     """Coordinates all agents in the analysis pipeline"""
@@ -78,4 +79,5 @@ class AgentOrchestrator:
             print(f"\n❌ Analysis failed: {e}\n")
             results["status"] = "failed"
             results["error"] = str(e)
+
             return results
