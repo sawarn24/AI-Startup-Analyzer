@@ -2,8 +2,7 @@ import google.generativeai as genai
 from config import GEMINI_API_KEY
 import json
 
-genai.configure(api_key=GEMINI_API_KEY)
-
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 class RecommendationAgent:
     """Agent to generate final investment recommendation"""
     
@@ -159,4 +158,5 @@ Return ONLY JSON, no markdown formatting.
                 ],
                 "deal_score": 50,
                 "next_steps": "Manual review required - rerun analysis or review documents manually"
+
             }
