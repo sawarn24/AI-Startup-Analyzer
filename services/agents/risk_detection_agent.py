@@ -3,8 +3,7 @@ from config import GEMINI_API_KEY
 import json
 import re
 
-genai.configure(api_key=GEMINI_API_KEY)
-
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 class RiskDetectionAgent:
     """Agent to detect red flags and risks"""
     
@@ -222,4 +221,5 @@ Rules:
             "risk_score": 50,
             "overall_assessment": "Unable to assess - analysis error",
             "error_note": "Risk detection encountered an error"
+
         }
