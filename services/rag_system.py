@@ -5,8 +5,7 @@ from config import GEMINI_API_KEY, CHROMA_DB_PATH
 import uuid
 import os
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
-HF_TOKEN = "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"
-
+from config import HF_TOKEN
 class RAGSystem:
     """RAG system using ChromaDB and Gemini embeddings"""
     
@@ -172,4 +171,5 @@ class RAGSystem:
             
         except Exception as e:
             print(f"❌ Error querying by doc type: {e}")
+
             return ""
