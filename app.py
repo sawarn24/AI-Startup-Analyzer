@@ -10,21 +10,6 @@ from services.rag_system import RAGSystem
 from services.agent_orchestrator import AgentOrchestrator
 from services.professional_report_generator import ProfessionalReportGenerator
 from services.gmail_sender import GmailSender
-if not os.path.exists('/tmp/credentials.json'):  # ✅ Check /tmp
-    credentials = {
-        "installed": {
-            "client_id": os.environ.get('GMAIL_CLIENT_ID'),
-            "client_secret": os.environ.get('GMAIL_CLIENT_SECRET'),
-            "project_id": "hack-482015",
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "redirect_uris": ["http://localhost"]
-        }
-    }
-    
-    with open('/tmp/credentials.json', 'w') as f:  # ✅ Write to /tmp
-        json.dump(credentials, f)
 
 # Page config
 st.set_page_config(
@@ -119,7 +104,7 @@ if 'startup_id' not in st.session_state:
     st.session_state.startup_id = None
 
 # Header
-st.markdown('<h1 class="main-header">🚀 AI Startup Analyzer</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">AI Startup Analyzer</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Powered by Google AI Technologies | Multi-Agent Analysis System</p>', unsafe_allow_html=True)
 
 # Sidebar
@@ -147,7 +132,7 @@ with st.sidebar:
     
     st.divider()
     
-    st.subheader("🛠️ Google Technologies")
+    st.subheader("Google Technologies")
     tech_stack = [
         "✅ Gemini 2.0 Flash",
         "✅ LangChain",
@@ -170,7 +155,7 @@ with tab1:
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("### 📄 Required Documents")
+        st.markdown("### Required Documents")
         pitch_deck = st.file_uploader(
             "**Pitch Deck (Required)**",
             type=['pdf'],
@@ -181,9 +166,9 @@ with tab1:
         if pitch_deck:
             st.success(f"✅ Uploaded: {pitch_deck.name}")
         
-        st.markdown("### 📝 Optional Documents")
+        st.markdown("### Optional Documents")
         
-        with st.expander("🎙️ Call Transcripts"):
+        with st.expander("Call Transcripts"):
             transcripts = st.file_uploader(
                 "Upload call transcripts",
                 type=['txt', 'docx', 'pdf'],
@@ -205,7 +190,7 @@ with tab1:
                 for e in emails:
                     st.success(f"✅ {e.name}")
         
-        with st.expander("📋 Founder Updates"):
+        with st.expander("Founder Updates"):
             updates = st.file_uploader(
                 "Upload founder update emails/reports",
                 type=['txt', 'docx', 'pdf'],
@@ -235,7 +220,7 @@ with tab1:
     st.divider()
     
     # Analyze button
-    if st.button("🚀 START ANALYSIS", disabled=not pitch_deck):
+    if st.button("START ANALYSIS", disabled=not pitch_deck):
         with st.spinner("🔄 Processing documents and running AI analysis..."):
             try:
                 # Initialize systems
@@ -266,24 +251,24 @@ with tab1:
                 progress_bar.progress(25)
                 
                 # Step 2: Add to RAG
-                status_text.text("🧠 Building knowledge base...")
+                status_text.text(" Building knowledge base...")
                 rag.add_documents(extracted_data, startup_id)
                 progress_bar.progress(40)
                 
                 # Step 3: Run agents
-                status_text.text("🤖 Running AI agents...")
+                status_text.text("Running AI agents...")
                 
                 # Create agent status display
                 agent_status = st.empty()
                 
                 def update_agent_status(agent_num, status):
                     agents = [
-                        "🔍 Data Extraction",
-                        "📊 Benchmarking",
-                        "🚨 Risk Detection",
-                        "🌐 Market Research",
-                        "🚀 Growth Assessment",
-                        "💰 Recommendation"
+                        "Data Extraction",
+                        " Benchmarking",
+                        " Risk Detection",
+                        "Market Research",
+                        "Growth Assessment",
+                        "Recommendation"
                     ]
                     
                     status_html = "<div style='padding: 1rem;'>"
@@ -324,7 +309,7 @@ with tab1:
 # TAB 2: RESULTS
 with tab2:
     if st.session_state.analysis_results is None:
-        st.info("👆 Upload documents in the first tab to start analysis")
+        st.info(" Upload documents in the first tab to start analysis")
     else:
         results = st.session_state.analysis_results
         
@@ -336,7 +321,7 @@ with tab2:
         growth_assessment = results.get('growth_assessment', {})
         
         # Header with company info
-        st.markdown(f"## 🏢 {company_info['name']}")
+        st.markdown(f"##  {company_info['name']}")
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -447,7 +432,7 @@ with tab2:
             st.plotly_chart(fig, use_container_width=True)
         
         with col4:
-            st.markdown("### 🎯 Benchmark Score")
+            st.markdown("###  Benchmark Score")
             benchmark_score = benchmark_data.get('benchmark_score', 50)
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
@@ -485,7 +470,7 @@ with tab2:
         
         # RED FLAGS
         if risk_analysis['red_flags']:
-            st.markdown("### 🚨 Red Flags Detected")
+            st.markdown("### Red Flags Detected")
             
             for flag in risk_analysis['red_flags']:
                 severity = flag['severity']
@@ -516,7 +501,7 @@ with tab2:
         st.divider()
         
         # FOLLOW-UP QUESTIONS
-        st.markdown("### 🤔 Suggested Follow-up Questions")
+        st.markdown("###  Suggested Follow-up Questions")
         for i, question in enumerate(recommendation['follow_up_questions'], 1):
             st.info(f"**{i}.** {question}")
         
@@ -589,19 +574,19 @@ with col1:
     st.info("""
     **Professional Report Includes:**
     
-    ✅ Executive Summary with Decision
+    Executive Summary with Decision
     
-    📊 Growth Dimension Radar Chart
+    Growth Dimension Radar Chart
     
-    📈 Multi-Score Comparison Charts
+     Multi-Score Comparison Charts
     
-    🚨 Detailed Risk Analysis
+     Detailed Risk Analysis
     
-    💡 Evidence-Based Insights
+     Evidence-Based Insights
     
-    ❓ Follow-up Questions
+     Follow-up Questions
     
-    🎯 Recommended Next Steps
+     Recommended Next Steps
     """)
 
 with col2:
@@ -641,7 +626,7 @@ if 'pdf_path' in st.session_state and os.path.exists(st.session_state['pdf_path'
         pdf_data = pdf_file.read()
         
         st.download_button(
-            label="📥 Download PDF Report",
+            label="Download PDF Report",
             data=pdf_data,
             file_name=st.session_state['pdf_filename'],
             mime="application/pdf",
@@ -654,24 +639,12 @@ if 'pdf_path' in st.session_state and os.path.exists(st.session_state['pdf_path'
     # EMAIL SECTION
     # ============================================================
     
-    st.markdown("### 📧 Send Report to Investors via Gmail")
+    st.markdown("###  Send Report to Investors via Gmail")
     
-    st.info("""
-    **Gmail API Setup (First Time Only):**
     
-    1️⃣ Download `credentials.json` from Google Cloud Console
-    
-    2️⃣ Place it in your project root directory
-    
-    3️⃣ Click "Send Email" - browser will open for authentication
-    
-    4️⃣ Grant permissions - token will be saved for future use
-    
-    **Free Tier:** Unlimited emails with your Gmail account!
-    """)
     
     # Single recipient
-    with st.expander("📤 Send to Single Investor", expanded=True):
+    with st.expander(" Send to Single Investor", expanded=True):
         investor_email = st.text_input(
             "Investor Email Address",
             placeholder="investor@example.com",
@@ -715,7 +688,7 @@ if 'pdf_path' in st.session_state and os.path.exists(st.session_state['pdf_path'
                         st.exception(e)
     
     # Multiple recipients
-    with st.expander("📤 Send to Multiple Investors"):
+    with st.expander(" Send to Multiple Investors"):
         st.markdown("**Enter email addresses (one per line):**")
         
         bulk_emails = st.text_area(
@@ -768,7 +741,7 @@ if 'pdf_path' in st.session_state and os.path.exists(st.session_state['pdf_path'
     st.divider()
     
     # Email preview
-    with st.expander("👁️ Preview Email Content"):
+    with st.expander(" Preview Email Content"):
         if recommendation['decision'] == "INVEST":
             preview_color = "#34a853"
             preview_emoji = "✅"
@@ -807,12 +780,12 @@ if 'pdf_path' in st.session_state and os.path.exists(st.session_state['pdf_path'
         """)
 
 else:
-    st.warning("⬆️ Generate the PDF report first using the button above")
+    st.warning("Generate the PDF report first using the button above")
 
 # TAB 3: ADVANCED INSIGHTS
 with tab3:
     if st.session_state.analysis_results is None:
-        st.info("👆 Upload documents in the first tab to start analysis")
+        st.info(" Upload documents in the first tab to start analysis")
     else:
         results = st.session_state.analysis_results
         growth_assessment = results.get('growth_assessment', {})
@@ -821,7 +794,7 @@ with tab3:
         st.header("📈 Advanced Insights")
         
         # Growth Dimensions Radar Chart
-        st.subheader("🎯 Growth Dimension Scores")
+        st.subheader(" Growth Dimension Scores")
         
         growth_scores = growth_assessment.get('growth_scores', {})
         
@@ -874,7 +847,7 @@ with tab3:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("📊 Benchmarking Details")
+            st.subheader("Benchmarking Details")
             
             comparisons = benchmark_data.get('comparisons', {})
             
@@ -892,7 +865,7 @@ with tab3:
                             st.write(f"**Notes:** {data['notes']}")
         
         with col2:
-            st.subheader("🚀 Growth Potential Details")
+            st.subheader(" Growth Potential Details")
             
             for dimension, data in growth_scores.items():
                 if isinstance(data, dict):
@@ -908,7 +881,7 @@ with tab3:
         st.divider()
         
         # Market validation
-        st.subheader("🌐 Market Validation")
+        st.subheader(" Market Validation")
         
         market_research = results.get('market_research', {})
         validations = market_research.get('validations', {})
@@ -928,5 +901,4 @@ st.markdown("""
     <p>🚀 <strong>AI Startup Analyzer</strong> | Powered by Google Cloud & Gemini 2.0</p>
     <p>Built with Streamlit • LangChain • ChromaDB • Multi-Agent AI System</p>
 </div>
-
 """, unsafe_allow_html=True)
