@@ -1,11 +1,14 @@
 import chromadb
 from chromadb.config import Settings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from config import GEMINI_API_KEY, CHROMA_DB_PATH
 import uuid
 import os
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 HF_TOKEN = os.getenv('HF_TOKEN')
+UPLOAD_FOLDER = "uploads"
+DATA_FOLDER = "data"
+CHROMA_DB_PATH = "./data/chroma_db"
+
 class RAGSystem:
     """RAG system using ChromaDB and Gemini embeddings"""
     
@@ -173,4 +176,5 @@ class RAGSystem:
             print(f"❌ Error querying by doc type: {e}")
 
             return ""
+
 
