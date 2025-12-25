@@ -3,7 +3,7 @@ from config import GEMINI_API_KEY, GOOGLE_SEARCH_API_KEY, SEARCH_ENGINE_ID
 import requests
 import json
 
-genai.configure(api_key=GEMINI_API_KEY)
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 class MarketResearchAgent:
     """Agent to validate claims with web research"""
@@ -168,4 +168,5 @@ Return ONLY JSON.
                 "notes": "Insufficient data"
             },
             "credibility_score": 50
+
         }
