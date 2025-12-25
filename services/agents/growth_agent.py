@@ -1,7 +1,7 @@
 import google.generativeai as genai
-from config import GEMINI_API_KEY
-import json
 
+import json
+import os
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 class GrowthAgent:
@@ -203,3 +203,4 @@ Return ONLY JSON.
             "recommendation_summary": "Insufficient data for growth assessment"
 
         }
+
