@@ -1,5 +1,5 @@
 import google.generativeai as genai
-from config import GEMINI_API_KEY
+import os
 import json
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
@@ -160,3 +160,4 @@ Return ONLY JSON, no markdown formatting.
                 "next_steps": "Manual review required - rerun analysis or review documents manually"
 
             }
+
