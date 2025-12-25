@@ -10,6 +10,8 @@ from services.rag_system import RAGSystem
 from services.agent_orchestrator import AgentOrchestrator
 from services.professional_report_generator import ProfessionalReportGenerator
 from services.gmail_sender import GmailSender
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(DATA_FOLDER, exist_ok=True)
 if not os.path.exists('/tmp/credentials.json'):  # ✅ Check /tmp
     credentials = {
         "installed": {
@@ -916,4 +918,5 @@ st.markdown("""
     <p>Built with Streamlit • LangChain • ChromaDB • Multi-Agent AI System</p>
 </div>
 """, unsafe_allow_html=True)
+
 
