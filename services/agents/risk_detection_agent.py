@@ -1,5 +1,5 @@
 import google.generativeai as genai
-from config import GEMINI_API_KEY
+import os
 import json
 import re
 
@@ -223,3 +223,4 @@ Rules:
             "error_note": "Risk detection encountered an error"
 
         }
+
