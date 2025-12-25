@@ -1,9 +1,11 @@
 import google.generativeai as genai
-from config import GEMINI_API_KEY, GOOGLE_SEARCH_API_KEY, SEARCH_ENGINE_ID
+import os
 import requests
 import json
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GOOGLE_SEARCH_API_KEY= os.getenv('GOOGLE_SEARCH_API_KEY')
+SEARCH_ENGINE_ID= os.getenv('SEARCH_ENGINE_ID')
 
 class MarketResearchAgent:
     """Agent to validate claims with web research"""
@@ -170,3 +172,4 @@ Return ONLY JSON.
             "credibility_score": 50
 
         }
+
