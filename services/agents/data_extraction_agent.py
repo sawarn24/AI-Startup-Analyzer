@@ -2,7 +2,7 @@ import google.generativeai as genai
 from config import GEMINI_API_KEY
 import json
 
-genai.configure(api_key=GEMINI_API_KEY)
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 class DataExtractionAgent:
     """Agent to extract structured data from documents"""
@@ -203,4 +203,5 @@ Rules:
                 "partnerships": [],
                 "awards": []
             }
+
         }
