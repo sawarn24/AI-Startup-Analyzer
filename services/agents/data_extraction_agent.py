@@ -9,7 +9,7 @@ class DataExtractionAgent:
     
     def __init__(self, rag_system):
         self.rag = rag_system
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     def extract(self, startup_id):
         """Extract all structured data"""
@@ -205,4 +205,5 @@ Rules:
             }
 
         }
+
 
