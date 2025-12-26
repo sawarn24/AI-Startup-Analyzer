@@ -9,7 +9,7 @@ class RiskDetectionAgent:
     
     def __init__(self, rag_system):
         self.rag = rag_system
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     def detect_risks(self, startup_id, extracted_data):
         """Detect all risk flags"""
@@ -223,4 +223,5 @@ Rules:
             "error_note": "Risk detection encountered an error"
 
         }
+
 
