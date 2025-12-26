@@ -1,72 +1,42 @@
 # services/gmail_sender.py
 
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.discovery import build
+import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-import base64
 import os
-import pickle
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-CREDENTIALS_FILE = '/tmp/credentials.json'
-TOKEN_FILE = '/tmp/token.pickle'
 class GmailSender:
-    """Send emails using Gmail API with PDF attachments"""
+    """Send emails using Gmail SMTP with App Password (no browser required)"""
     
     def __init__(self):
-        self.creds = None
-        self.service = None
-        self._authenticate()
-    
-    def _authenticate(self):
-        """Authenticate with Gmail API"""
+        """Initialize Gmail sender with credentials from environment variables"""
+        self.gmail_user = os.getenv('GMAIL_USER')
+        self.gmail_app_password = os.getenv('GMAIL_APP_PASSWORD')
         
-        # Check if we have saved credentials
-        if os.path.exists('token.pickle'):
-            with open('token.pickle', 'rb') as token:
-                self.creds = pickle.load(token)
+        # Validate credentials
+        if not self.gmail_user:
+            raise ValueError(
+                "GMAIL_USER environment variable is not set!\n"
+                "Please set it to your Gmail address (e.g., your-email@gmail.com)"
+            )
+        if not self.gmail_app_password:
+            raise ValueError(
+                "GMAIL_APP_PASSWORD environment variable is not set!\n"
+                "Please generate an App Password from Google Account settings:\n"
+                "1. Go to https://myaccount.google.com/security\n"
+                "2. Enable 2-Step Verification\n"
+                "3. Go to App passwords\n"
+                "4. Generate a new app password for 'Mail'\n"
+                "5. Copy the 16-character password and set it as GMAIL_APP_PASSWORD"
+            )
         
-        # If no valid credentials, let user log in
-        if not self.creds or not self.creds.valid:
-            if self.creds and self.creds.expired and self.creds.refresh_token:
-                self.creds.refresh(Request())
-            else:
-               if not os.path.exists(CREDENTIALS_FILE):
-                    # Fallback: check current directory (for local development)
-                    if os.path.exists('credentials.json'):
-                        credentials_path = 'credentials.json'
-                    else:
-                        raise FileNotFoundError(
-                            "credentials.json not found! Please ensure environment variables are set:\n"
-                            "- GMAIL_CLIENT_ID\n"
-                            "- GMAIL_CLIENT_SECRET\n\n"
-                            "For local development:\n"
-                            "1. Go to https://console.cloud.google.com/\n"
-                            "2. Enable Gmail API\n"
-                            "3. Create OAuth 2.0 credentials\n"
-                            "4. Download as 'credentials.json'"
-                        )
-               else:
-                credentials_path = CREDENTIALS_FILE
-                
-                flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
-                self.creds = flow.run_local_server(port=0)
-            
-            # Save credentials for next time
-            with open(TOKEN_FILE, 'wb') as token:
-                pickle.dump(self.creds, token)
-        
-        self.service = build('gmail', 'v1', credentials=self.creds)
-        print("✅ Gmail API authenticated successfully")
+        print("✅ Gmail SMTP configured successfully")
     
     def send_report(self, recipient_email, subject, company_name, decision, pdf_path):
         """
-        Send investment report via Gmail API
+        Send investment report via Gmail SMTP
         
         Args:
             recipient_email: Email address of recipient
@@ -74,6 +44,9 @@ class GmailSender:
             company_name: Name of the startup
             decision: Investment decision (INVEST/MAYBE/PASS)
             pdf_path: Path to the PDF report file
+        
+        Returns:
+            bool: True if sent successfully, False otherwise
         """
         
         try:
@@ -83,8 +56,9 @@ class GmailSender:
             
             # Create message
             message = MIMEMultipart()
-            message['to'] = recipient_email
-            message['subject'] = subject
+            message['From'] = self.gmail_user
+            message['To'] = recipient_email
+            message['Subject'] = subject
             
             # Determine colors based on decision
             if decision == "INVEST":
@@ -135,16 +109,6 @@ class GmailSender:
                     border-radius: 5px;
                     font-size: 12px; 
                     color: #5f6368;
-                  }}
-                  .cta-button {{
-                    background: #4285f4;
-                    color: white;
-                    padding: 12px 25px;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    display: inline-block;
-                    margin: 20px 0;
-                    font-weight: bold;
                   }}
                 </style>
               </head>
@@ -223,6 +187,7 @@ class GmailSender:
             </html>
             """
             
+            # Attach HTML body
             message.attach(MIMEText(html_body, 'html'))
             
             # Attach PDF
@@ -237,26 +202,41 @@ class GmailSender:
             part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
             message.attach(part)
             
-            # Encode message
-            raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+            # Connect to Gmail SMTP server
+            print(f"📤 Connecting to Gmail SMTP server...")
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
             
-            # Send via Gmail API
-            send_message = {'raw': raw}
-            result = self.service.users().messages().send(
-                userId='me',
-                body=send_message
-            ).execute()
+            # Login with app password
+            print(f"🔐 Authenticating with Gmail...")
+            server.login(self.gmail_user, self.gmail_app_password)
             
-            print(f"✅ Email sent successfully via Gmail API")
+            # Send email
+            print(f"📧 Sending email to {recipient_email}...")
+            server.send_message(message)
+            
+            # Close connection
+            server.quit()
+            
+            print(f"✅ Email sent successfully!")
+            print(f"   From: {self.gmail_user}")
             print(f"   To: {recipient_email}")
             print(f"   Subject: {subject}")
-            print(f"   Message ID: {result['id']}")
             print(f"   PDF attached: {filename}")
             
             return True
             
         except FileNotFoundError as e:
             print(f"❌ File error: {e}")
+            return False
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ Authentication failed: {e}")
+            print(f"   Check that:")
+            print(f"   1. GMAIL_USER is correct: {self.gmail_user}")
+            print(f"   2. GMAIL_APP_PASSWORD is a valid 16-character app password")
+            print(f"   3. 2-Step Verification is enabled on your Google Account")
+            return False
+        except smtplib.SMTPException as e:
+            print(f"❌ SMTP error: {e}")
             return False
         except Exception as e:
             print(f"❌ Error sending email: {e}")
@@ -282,7 +262,10 @@ class GmailSender:
             'failed_emails': []
         }
         
-        for email in recipient_list:
+        print(f"\n📧 Sending bulk emails to {len(recipient_list)} recipients...")
+        
+        for i, email in enumerate(recipient_list, 1):
+            print(f"\n[{i}/{len(recipient_list)}] Processing: {email}")
             success = self.send_report(email, subject, company_name, decision, pdf_path)
             
             if success:
@@ -291,11 +274,95 @@ class GmailSender:
                 results['failed'] += 1
                 results['failed_emails'].append(email)
         
-        print(f"\n📧 Bulk email summary:")
-        print(f"   ✅ Sent: {results['success']}")
+        print(f"\n" + "="*50)
+        print(f"📧 Bulk email summary:")
+        print(f"   ✅ Successfully sent: {results['success']}")
         print(f"   ❌ Failed: {results['failed']}")
+        if results['failed_emails']:
+            print(f"   Failed emails: {', '.join(results['failed_emails'])}")
+        print("="*50)
         
-
         return results
+    
+    def send_simple_email(self, to_email, subject, body, is_html=False):
+        """
+        Send a simple email without attachments
+        
+        Args:
+            to_email: Recipient email address
+            subject: Email subject
+            body: Email body content
+            is_html: Whether body is HTML or plain text
+        
+        Returns:
+            bool: True if sent successfully, False otherwise
+        """
+        
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = self.gmail_user
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            
+            if is_html:
+                msg.attach(MIMEText(body, 'html'))
+            else:
+                msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            server.login(self.gmail_user, self.gmail_app_password)
+            server.send_message(msg)
+            server.quit()
+            
+            print(f"✅ Simple email sent to {to_email}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error sending simple email: {e}")
+            return False
 
 
+# Example usage and testing
+if __name__ == "__main__":
+    """Test the Gmail sender"""
+    
+    print("🧪 Testing Gmail Sender with SMTP...")
+    print("="*50)
+    
+    try:
+        # Initialize sender
+        sender = GmailSender()
+        
+        # Test simple email
+        print("\n📧 Sending test email...")
+        success = sender.send_simple_email(
+            to_email="sawarnish661@gmail.com",
+            subject="Test Email - RAG Investment App",
+            body="""
+            <html>
+                <body>
+                    <h2>Gmail SMTP Test</h2>
+                    <p>If you receive this email, the Gmail sender is working correctly!</p>
+                    <p><strong>Configuration:</strong></p>
+                    <ul>
+                        <li>Using SMTP with App Password</li>
+                        <li>No browser authentication required</li>
+                        <li>Works in deployment environments</li>
+                    </ul>
+                </body>
+            </html>
+            """,
+            is_html=True
+        )
+        
+        if success:
+            print("\n✅ Test passed! Gmail sender is working.")
+        else:
+            print("\n❌ Test failed. Check your environment variables.")
+            
+    except ValueError as e:
+        print(f"\n❌ Configuration error: {e}")
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
