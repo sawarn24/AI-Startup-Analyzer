@@ -7,7 +7,7 @@ class RecommendationAgent:
     """Agent to generate final investment recommendation"""
     
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     def generate_recommendation(self, extracted_data, risk_analysis, market_research, benchmark_data, growth_assessment):
         """Generate final investment recommendation"""
@@ -160,4 +160,5 @@ Return ONLY JSON, no markdown formatting.
                 "next_steps": "Manual review required - rerun analysis or review documents manually"
 
             }
+
 
