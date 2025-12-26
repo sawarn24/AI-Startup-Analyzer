@@ -12,7 +12,7 @@ class MarketResearchAgent:
     
     def __init__(self, rag_system):
         self.rag = rag_system
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     def research(self, startup_id, extracted_data):
         """Conduct market research and validation"""
@@ -172,4 +172,5 @@ Return ONLY JSON.
             "credibility_score": 50
 
         }
+
 
