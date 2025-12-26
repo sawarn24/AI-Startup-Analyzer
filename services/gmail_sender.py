@@ -1,42 +1,55 @@
-# services/gmail_sender.py
+# services/gmail_sender.py - Gmail API Version (No SMTP ports needed)
 
-import smtplib
+import os
+import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-import os
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 class GmailSender:
-    """Send emails using Gmail SMTP with App Password (no browser required)"""
+    """Send emails using Gmail API (works when SMTP ports are blocked)"""
     
     def __init__(self):
-        """Initialize Gmail sender with credentials from environment variables"""
-        self.gmail_user = os.getenv('GMAIL_USER')
-        self.gmail_app_password = os.getenv('GMAIL_APP_PASSWORD')
+        """Initialize Gmail API with credentials from environment"""
         
-        # Validate credentials
-        if not self.gmail_user:
+        client_id = os.getenv('GMAIL_CLIENT_ID')
+        client_secret = os.getenv('GMAIL_CLIENT_SECRET')
+        refresh_token = os.getenv('GMAIL_REFRESH_TOKEN')
+        
+        if not all([client_id, client_secret, refresh_token]):
             raise ValueError(
-                "GMAIL_USER environment variable is not set!\n"
-                "Please set it to your Gmail address (e.g., your-email@gmail.com)"
-            )
-        if not self.gmail_app_password:
-            raise ValueError(
-                "GMAIL_APP_PASSWORD environment variable is not set!\n"
-                "Please generate an App Password from Google Account settings:\n"
-                "1. Go to https://myaccount.google.com/security\n"
-                "2. Enable 2-Step Verification\n"
-                "3. Go to App passwords\n"
-                "4. Generate a new app password for 'Mail'\n"
-                "5. Copy the 16-character password and set it as GMAIL_APP_PASSWORD"
+                "❌ Gmail API credentials not found!\n\n"
+                "Required environment variables:\n"
+                "  - GMAIL_CLIENT_ID\n"
+                "  - GMAIL_CLIENT_SECRET\n"
+                "  - GMAIL_REFRESH_TOKEN\n\n"
+                "To get these:\n"
+                "1. Download get_refresh_token.py\n"
+                "2. Place credentials.json in same folder\n"
+                "3. Run: python get_refresh_token.py\n"
+                "4. Copy the 3 variables to Render environment"
             )
         
-        print("✅ Gmail SMTP configured successfully")
+        # Create credentials
+        self.creds = Credentials(
+            token=None,
+            refresh_token=refresh_token,
+            token_uri='https://oauth2.googleapis.com/token',
+            client_id=client_id,
+            client_secret=client_secret,
+            scopes=['https://www.googleapis.com/auth/gmail.send']
+        )
+        
+        # Build Gmail service
+        self.service = build('gmail', 'v1', credentials=self.creds)
+        print("✅ Gmail API authenticated successfully")
     
     def send_report(self, recipient_email, subject, company_name, decision, pdf_path):
         """
-        Send investment report via Gmail SMTP
+        Send investment report via Gmail API
         
         Args:
             recipient_email: Email address of recipient
@@ -56,9 +69,8 @@ class GmailSender:
             
             # Create message
             message = MIMEMultipart()
-            message['From'] = self.gmail_user
-            message['To'] = recipient_email
-            message['Subject'] = subject
+            message['to'] = recipient_email
+            message['subject'] = subject
             
             # Determine colors based on decision
             if decision == "INVEST":
@@ -71,7 +83,7 @@ class GmailSender:
                 decision_color = "#ea4335"
                 decision_emoji = "❌"
             
-            # HTML email body with professional styling
+            # HTML email body
             html_body = f"""
             <html>
               <head>
@@ -187,7 +199,6 @@ class GmailSender:
             </html>
             """
             
-            # Attach HTML body
             message.attach(MIMEText(html_body, 'html'))
             
             # Attach PDF
@@ -202,25 +213,20 @@ class GmailSender:
             part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
             message.attach(part)
             
-            # Connect to Gmail SMTP server
-            print(f"📤 Connecting to Gmail SMTP server...")
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            # Encode and send
+            raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+            send_message = {'raw': raw}
             
-            # Login with app password
-            print(f"🔐 Authenticating with Gmail...")
-            server.login(self.gmail_user, self.gmail_app_password)
-            
-            # Send email
-            print(f"📧 Sending email to {recipient_email}...")
-            server.send_message(message)
-            
-            # Close connection
-            server.quit()
+            print(f"📧 Sending via Gmail API...")
+            result = self.service.users().messages().send(
+                userId='me',
+                body=send_message
+            ).execute()
             
             print(f"✅ Email sent successfully!")
-            print(f"   From: {self.gmail_user}")
             print(f"   To: {recipient_email}")
             print(f"   Subject: {subject}")
+            print(f"   Message ID: {result['id']}")
             print(f"   PDF attached: {filename}")
             
             return True
@@ -228,141 +234,50 @@ class GmailSender:
         except FileNotFoundError as e:
             print(f"❌ File error: {e}")
             return False
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"❌ Authentication failed: {e}")
-            print(f"   Check that:")
-            print(f"   1. GMAIL_USER is correct: {self.gmail_user}")
-            print(f"   2. GMAIL_APP_PASSWORD is a valid 16-character app password")
-            print(f"   3. 2-Step Verification is enabled on your Google Account")
-            return False
-        except smtplib.SMTPException as e:
-            print(f"❌ SMTP error: {e}")
-            return False
         except Exception as e:
-            print(f"❌ Error sending email: {e}")
+            print(f"❌ Error: {e}")
             import traceback
             traceback.print_exc()
             return False
     
     def send_bulk_reports(self, recipient_list, subject, company_name, decision, pdf_path):
-        """
-        Send report to multiple recipients
+        """Send report to multiple recipients"""
         
-        Args:
-            recipient_list: List of email addresses
-            subject, company_name, decision, pdf_path: Same as send_report()
+        results = {'success': 0, 'failed': 0, 'failed_emails': []}
         
-        Returns:
-            dict with success/failure counts
-        """
-        
-        results = {
-            'success': 0,
-            'failed': 0,
-            'failed_emails': []
-        }
-        
-        print(f"\n📧 Sending bulk emails to {len(recipient_list)} recipients...")
+        print(f"\n📧 Sending to {len(recipient_list)} recipients...")
         
         for i, email in enumerate(recipient_list, 1):
-            print(f"\n[{i}/{len(recipient_list)}] Processing: {email}")
-            success = self.send_report(email, subject, company_name, decision, pdf_path)
-            
-            if success:
+            print(f"\n[{i}/{len(recipient_list)}] {email}")
+            if self.send_report(email, subject, company_name, decision, pdf_path):
                 results['success'] += 1
             else:
                 results['failed'] += 1
                 results['failed_emails'].append(email)
         
-        print(f"\n" + "="*50)
-        print(f"📧 Bulk email summary:")
-        print(f"   ✅ Successfully sent: {results['success']}")
-        print(f"   ❌ Failed: {results['failed']}")
-        if results['failed_emails']:
-            print(f"   Failed emails: {', '.join(results['failed_emails'])}")
-        print("="*50)
+        print(f"\n{'='*50}")
+        print(f"✅ Sent: {results['success']} | ❌ Failed: {results['failed']}")
+        print(f"{'='*50}")
         
         return results
     
     def send_simple_email(self, to_email, subject, body, is_html=False):
-        """
-        Send a simple email without attachments
-        
-        Args:
-            to_email: Recipient email address
-            subject: Email subject
-            body: Email body content
-            is_html: Whether body is HTML or plain text
-        
-        Returns:
-            bool: True if sent successfully, False otherwise
-        """
+        """Send simple email without attachment"""
         
         try:
             msg = MIMEMultipart()
-            msg['From'] = self.gmail_user
-            msg['To'] = to_email
-            msg['Subject'] = subject
+            msg['to'] = to_email
+            msg['subject'] = subject
+            msg.attach(MIMEText(body, 'html' if is_html else 'plain'))
             
-            if is_html:
-                msg.attach(MIMEText(body, 'html'))
-            else:
-                msg.attach(MIMEText(body, 'plain'))
+            raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+            self.service.users().messages().send(
+                userId='me',
+                body={'raw': raw}
+            ).execute()
             
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-            server.login(self.gmail_user, self.gmail_app_password)
-            server.send_message(msg)
-            server.quit()
-            
-            print(f"✅ Simple email sent to {to_email}")
+            print(f"✅ Email sent to {to_email}")
             return True
-            
         except Exception as e:
-            print(f"❌ Error sending simple email: {e}")
+            print(f"❌ Error: {e}")
             return False
-
-
-# Example usage and testing
-if __name__ == "__main__":
-    """Test the Gmail sender"""
-    
-    print("🧪 Testing Gmail Sender with SMTP...")
-    print("="*50)
-    
-    try:
-        # Initialize sender
-        sender = GmailSender()
-        
-        # Test simple email
-        print("\n📧 Sending test email...")
-        success = sender.send_simple_email(
-            to_email="sawarnish661@gmail.com",
-            subject="Test Email - RAG Investment App",
-            body="""
-            <html>
-                <body>
-                    <h2>Gmail SMTP Test</h2>
-                    <p>If you receive this email, the Gmail sender is working correctly!</p>
-                    <p><strong>Configuration:</strong></p>
-                    <ul>
-                        <li>Using SMTP with App Password</li>
-                        <li>No browser authentication required</li>
-                        <li>Works in deployment environments</li>
-                    </ul>
-                </body>
-            </html>
-            """,
-            is_html=True
-        )
-        
-        if success:
-            print("\n✅ Test passed! Gmail sender is working.")
-        else:
-            print("\n❌ Test failed. Check your environment variables.")
-            
-    except ValueError as e:
-        print(f"\n❌ Configuration error: {e}")
-    except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
