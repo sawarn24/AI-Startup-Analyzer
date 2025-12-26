@@ -9,7 +9,7 @@ class GrowthAgent:
     
     def __init__(self, rag_system):
         self.rag = rag_system
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     def assess_growth(self, startup_id, extracted_data, benchmark_data):
         """Assess growth potential and scalability"""
@@ -203,4 +203,5 @@ Return ONLY JSON.
             "recommendation_summary": "Insufficient data for growth assessment"
 
         }
+
 
