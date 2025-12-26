@@ -12,7 +12,7 @@ class BenchmarkingAgent:
     
     def __init__(self, rag_system):
         self.rag = rag_system
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     def benchmark(self, startup_id, extracted_data):
         """Benchmark startup against sector peers"""
@@ -248,4 +248,5 @@ Guidelines:
             "summary": "Unable to benchmark due to insufficient data"
 
         }
+
 
